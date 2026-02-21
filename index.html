@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Calculadora de Mergulho Pro</title>
+    <!-- Ícones e Estilos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- Biblioteca PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0071C5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+</head>
+<body>
+
+<div class="app-container">
+    
+    <header class="app-header">
+        <i class="fa-solid fa-person-swimming"></i> <span id="header-title">Plano de Mergulho</span>
+    </header>
+
+    <main class="app-content">
+        
+        <!-- ABA 1: PLANO DE MERGULHO E SUCESSIVO -->
+        <section id="tab-plano" class="tab-section active">
+            <div id="areaPrintPlano">
+                <div class="card form-card">
+                    <h4 class="section-subtitle"><i class="fa-solid fa-anchor"></i> 1º MERGULHO</h4>
+                    <div class="input-group">
+                        <label><i class="fa-solid fa-water"></i> PROFUNDIDADE (M)</label>
+                        <input type="number" id="profundidade" step="0.1" placeholder="Ex: 30">
+                    </div>
+
+                    <div class="input-group">
+                        <label><i class="fa-solid fa-stopwatch"></i> TEMPO DE FUNDO (MIN)</label>
+                        <input type="number" id="tempo" placeholder="Ex: 12">
+                    </div>
+
+                    <div class="input-group">
+                        <label><i class="fa-solid fa-mountain"></i> ALTITUDE DO LOCAL</label>
+                        <select id="altitude">
+                            <option value="0">Nível do Mar (0 m)</option>
+                            <option value="304.8">304,8 m</option>
+                            <option value="609.6">609,6 m</option>
+                            <option value="914.4">914,4 m</option>
+                            <option value="1219.1">1219,1 m</option>
+                            <option value="1523.9">1523,9 m</option>
+                            <option value="1828.7">1828,7 m</option>
+                            <option value="2133.5">2133,5 m</option>
+                            <option value="2438.3">2438,3 m</option>
+                            <option value="2743.1">2743,1 m</option>
+                            <option value="3047.9">3047,9 m</option>
+                        </select>
+                    </div>
+
+                    <div class="card sucessivo-card" style="margin-top: 20px; background: #f9f9f9;">
+                        <h4 class="section-subtitle"><i class="fa-solid fa-clock-rotate-left"></i> 2º Mergulho (OPCIONAL)</h4>
+                        <div class="input-group">
+                            <label><i class="fa-solid fa-hourglass-half"></i> INTERVALO DE SUPERFÍCIE (MIN)</label>
+                            <input type="number" id="intervalo" placeholder="Ex: 60">
+                        </div>
+                        <div class="input-group">
+                            <label><i class="fa-solid fa-arrow-down-up-across-line"></i> PROF. 2º MERGULHO (M)</label>
+                            <input type="number" id="profundidade2" step="0.1" placeholder="Ex: 20">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAINEL DE RESULTADOS -->
+                <div id="resultsPanel" class="results-container" style="display: none;">
+                    <h3 class="results-title">RELATÓRIO DE SEGURANÇA</h3>
+                    <div class="results-card">
+                        
+                        <!-- NDL e Margem -->
+                        <div class="result-main">
+                            <p class="result-label">LIMITE NÃO-DESCOMPRESSIVO</p>
+                            <div class="result-value"><span id="resLND">--</span> <small>MIN</small></div>
+                        </div>
+
+                        <div class="result-row" style="margin: 15px 0; background: rgba(255,255,255,0.5); padding: 10px; border-radius: 8px; border: 1px solid #d1d9e0;">
+                            <div class="result-col">
+                                <p class="result-label" style="color: #2c3e50;">TEMPO RESTANTE (MARGEM)</p>
+                                <div class="result-sub-value" id="resTempoRestante" style="font-size: 1.6rem; color: #27ae60; font-weight: 800;">-- MIN</div>
+                            </div>
+                        </div>
+
+                        <!-- Info Sucessiva (Aparece apenas se preenchido) -->
+                        <div class="result-divider" id="divisaoSucessivo" style="display: none;"></div>
+                        <div class="result-row" id="resultadoSucessivo" style="display: none; background: #eef2f7; padding: 12px; border-radius: 8px; margin-bottom: 15px; flex-direction: column;">
+                            <div style="display: flex; justify-content: space-between; width: 100%;">
+                                <div class="result-col">
+                                    <p class="result-label">NOVO GRUPO</p>
+                                    <div class="result-sub-value" id="resNovoGrupo" style="color: #0071C5;">--</div>
+                                </div>
+                                <div class="result-divider-vertical"></div>
+                                <div class="result-col">
+                                    <p class="result-label">NITROGÊNIO</p>
+                                    <div class="result-sub-value"><span id="resTNR">--</span> MIN</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grupos e Correções -->
+                        <div class="result-divider"></div>
+                        <div class="result-row">
+                            <div class="result-col">
+                                <p class="result-label">GRUPO ATUAL</p>
+                                <div class="result-sub-value" id="resGrupo">--</div>
+                            </div>
+                            <div class="result-divider-vertical"></div>
+                            <div class="result-col">
+                                <p class="result-label">PROF. CORRIGIDA</p>
+                                <div class="result-sub-value"><span id="resProfCorrigida">--</span> M</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <p id="resStatus">Aguardando cálculos...</p>
+                    </div>
+                </div>
+            </div> <!-- Fim areaPrintPlano -->
+
+            <div class="button-group">
+                <button class="btn-primary" onclick="calcularMergulho()">CALCULAR PLANO</button>
+                <button class="btn-reset" onclick="resetarPlano()"><i class="fa-solid fa-rotate-right"></i></button>
+            </div>
+            <button class="btn-secondary" onclick="exportarPDF('areaPrintPlano')"><i class="fa-solid fa-file-pdf"></i> EXPORTAR PLANO</button>
+        </section>
+
+        <!-- ABA 2: CÁLCULO DE AUTONOMIA (GÁS) -->
+        <section id="tab-gas" class="tab-section">
+            <div id="areaPrintGas">
+                <div class="card form-card">
+                    <div class="input-group">
+                        <label><i class="fa-solid fa-gauge-high"></i> PRESSÃO INICIAL (BAR)</label>
+                        <input type="number" id="pressaoInicial" placeholder="Ex: 200">
+                    </div>
+                    <div class="input-group">
+                        <label><i class="fa-solid fa-cylinder-bottle"></i> VOLUME DO CILINDRO (L)</label>
+                        <input type="number" id="volumeCilindro" placeholder="Ex: 11.1">
+                    </div>
+                    <div class="input-group">
+                        <label><i class="fa-solid fa-triangle-exclamation"></i> RESERVA DE SEGURANÇA (BAR)</label>
+                        <input type="number" id="reservaGas" value="50">
+                    </div>
+                    <div class="input-group">
+                        <label><i class="fa-solid fa-arrows-down-to-line"></i> PROFUNDIDADE MÉDIA (M)</label>
+                        <input type="number" id="profMedia" placeholder="Ex: 18">
+                    </div>
+                    <div class="input-group">
+                        <label><i class="fa-solid fa-lungs"></i> CONSUMO SUPERFÍCIE (SAC)</label>
+                        <input type="number" id="sacConsumo" value="20">
+                        <small style="font-size: 0.7rem; color: #7F8C8D;">Padrão: 20 L/min</small>
+                    </div>
+                </div>
+
+                <div id="resultsGas" class="results-container" style="display: none;">
+                    <h3 class="results-title">AUTONOMIA ESTIMADA</h3>
+                    <div class="results-card gas-result">
+                        <div class="result-main">
+                            <p class="result-label">TEMPO NO FUNDO DISPONÍVEL</p>
+                            <div class="result-value" style="color: #27ae60;"><span id="resTempoGas">--</span> <small>MIN</small></div>
+                        </div>
+                        <div class="result-divider"></div>
+                        <div class="result-row">
+                            <div class="result-col">
+                                <p class="result-label">LITROS ÚTEIS</p>
+                                <div class="result-sub-value"><span id="resLitrosTotais">--</span> L</div>
+                            </div>
+                            <div class="result-divider-vertical"></div>
+                            <div class="result-col">
+                                <p class="result-label">PRESSÃO AMBIENTE</p>
+                                <div class="result-sub-value"><span id="resATA">--</span> ATA</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" onclick="calcularGas()">CALCULAR AUTONOMIA</button>
+                <button class="btn-reset" onclick="resetarGas()"><i class="fa-solid fa-rotate-right"></i></button>
+            </div>
+            <button class="btn-secondary" onclick="exportarPDF('areaPrintGas')"><i class="fa-solid fa-file-pdf"></i> EXPORTAR CÁLCULO GÁS</button>
+        </section>
+
+        <!-- ABA 3: INFO -->
+        <section id="tab-info" class="tab-section">
+            <h2 class="section-title">Sobre o Aplicativo</h2>
+            <div class="card info-card">
+                <div class="info-header">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <div>
+                        <h4>Planejador de Mergulho</h4>
+                        <p>Versão 1.2.0</p>
+                        <p style="margin-top: 10px; font-size: 0.85rem;">Desenvolvido para auxílio em operações submersas baseadas em tabelas TLSD e física aplicada ao mergulho. Por Cb Magalhães e Cb Guerra</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Navegação Inferior -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('plano', this, 'Plano de Mergulho')">
+            <i class="fa-solid fa-chart-column"></i>
+            <span>PLANO</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('gas', this, 'Calculadora de autonomia')">
+            <i class="fa-solid fa-calculator"></i>
+            <span>Calculadora de autonomia</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('info', this, 'Informações')">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>INFO</span>
+        </div>
+    </nav>
+</div>
+<div id="toast-container"></div>
+<script>
+    // PWA
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+            .then(() => console.log("Service Worker registrado com sucesso!"))
+            .catch(err => console.log("Erro ao registrar Service Worker:", err));
+    }
+</script>
+
+<script src="logica.js"></script>
+</body>
+</html>
